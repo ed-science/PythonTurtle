@@ -92,11 +92,11 @@ def rmtree_glob(file_glob):
     for item in glob(file_glob, recursive=True):
         try:
             os.remove(item)
-            print('%s removed ...' % item)
+            print(f'{item} removed ...')
         except OSError:
             try:
                 shutil.rmtree(item)
-                print('%s/ removed ...' % item)
+                print(f'{item}/ removed ...')
             except OSError as err:
                 print(err)
 

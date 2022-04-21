@@ -71,11 +71,7 @@ def page_list(parent=None):
         ["Level 4", resource_filename("help4.png")],
     ]
 
-    pages = [
-        HelpPage(parent=parent,
-                 bitmap=wx.Bitmap(bitmap_file),
-                 caption=caption)
+    return [
+        HelpPage(parent=parent, bitmap=wx.Bitmap(bitmap_file), caption=caption)
         for [caption, bitmap_file] in help_images_list
     ]
-
-    return pages
