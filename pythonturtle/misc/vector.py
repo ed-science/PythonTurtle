@@ -117,7 +117,7 @@ class Vector(tuple):
         return self
 
     def __repr__(self):
-        return "Vector(" + tuple.__repr__(self) + ")"
+        return f"Vector({tuple.__repr__(self)})"
 
     def norm(self):
         """

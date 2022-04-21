@@ -48,8 +48,7 @@ class Console(InteractiveConsole):
         sys.stdout.flush()
 
     def push(self, command):
-        more = self.runsource(command, self.filename)
-        return more
+        return self.runsource(command, self.filename)
 
     def showsyntaxerror(self, filename=None):
         ex_type, value, sys.last_traceback = sys.exc_info()
@@ -130,10 +129,6 @@ class Console(InteractiveConsole):
         more = 0
         while True:
             try:
-                if more:
-                    pass  # prompt = sys.ps2
-                else:
-                    pass  # prompt = sys.ps1
                 try:
                     line = self.raw_input()  # prompt)
                 except EOFError:

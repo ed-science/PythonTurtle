@@ -63,7 +63,7 @@ class ShellFrame(frame.Frame, frame.ShellFrameMixin):
         if size == wx.DefaultSize:
             self.SetSize((750, 525))
 
-        intro = 'PyShell %s - The Flakiest Python Shell' % VERSION
+        intro = f'PyShell {VERSION} - The Flakiest Python Shell'
         self.SetStatusText(intro.replace('\n', ', '))
         self.shell = Shell(parent=self, id=-1, introText=intro,
                            locals=locals, InterpClass=InterpClass,
@@ -443,7 +443,7 @@ class Shell(editwindow.EditWindow):
     def execStartupScript(self, startupScript):
         """Execute the user's PYTHONSTARTUP script if they have one."""
         if startupScript and os.path.isfile(startupScript):
-            text = 'Startup script executed: ' + startupScript
+            text = f'Startup script executed: {startupScript}'
             self.push('print %r; execfile(%r)' % (text, startupScript))
             self.interp.startupScript = startupScript
         else:
@@ -483,9 +483,7 @@ Platform: %s""" % (
         # currpos = self.GetCurrentPos()
         # stoppos = self.promptPosEnd
         # Return (Enter) needs to be ignored in this handler.
-        if key in [wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER]:
-            pass
-        else:
+        if key not in [wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER]:
             # Allow the normal event handling to take place.
             event.Skip()
         """
@@ -600,11 +598,9 @@ Platform: %s""" % (
             if not self.waiting_for_process:
                 self.processLine()
 
-        # Complete Text (from already typed words)
         elif shiftDown and key in [wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER]:
             pass  # self.OnShowCompHistory()
 
-        # Ctrl+Return (Ctrl+Enter) is used to insert a line break.
         elif controlDown and key in [wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER]:
             if self.CallTipActive():
                 self.CallTipCancel()
@@ -613,54 +609,42 @@ Platform: %s""" % (
             else:
                 self.insertLineBreak()
 
-        # Let Ctrl-Alt-* get handled normally.
         elif controlDown and altDown:
             event.Skip()
 
-        # Clear the current, unexecuted command.
         elif key == wx.WXK_ESCAPE:
             if self.CallTipActive():
                 event.Skip()
             else:
                 self.clearCommand()
 
-        # Clear the current command
         elif key == wx.WXK_BACK and controlDown and shiftDown:
             self.clearCommand()
 
-        # Increase font size.
         elif controlDown and key in (ord(']'), wx.WXK_NUMPAD_ADD):
             dispatcher.send(signal='FontIncrease')
 
-        # Decrease font size.
         elif controlDown and key in (ord('['), wx.WXK_NUMPAD_SUBTRACT):
             dispatcher.send(signal='FontDecrease')
 
-        # Default font size.
         elif controlDown and key in (ord('='), wx.WXK_NUMPAD_DIVIDE):
             dispatcher.send(signal='FontDefault')
 
-        # Cut to the clipboard.
         elif (controlDown and key in (ord('X'), ord('x'))) \
                 or (shiftDown and key == wx.WXK_DELETE):
             self.Cut()
 
-        # Copy to the clipboard.
         elif controlDown and not shiftDown \
                 and key in (ord('C'), ord('c'), wx.WXK_INSERT):
             self.Copy()
 
-        # Copy to the clipboard, including prompts.
         elif controlDown and shiftDown \
                 and key in (ord('C'), ord('c'), wx.WXK_INSERT):
             self.CopyWithPrompts()
 
-        # Copy to the clipboard, including prefixed prompts.
-        elif altDown and not controlDown \
-                and key in (ord('C'), ord('c'), wx.WXK_INSERT):
+        elif altDown and key in (ord('C'), ord('c'), wx.WXK_INSERT):
             self.CopyWithPromptsPrefixed()
 
-        # Home needs to be aware of the prompt.
         elif key == wx.WXK_HOME:
             home = self.promptPosEnd
             if currpos > home:
@@ -671,50 +655,36 @@ Platform: %s""" % (
             else:
                 event.Skip()
 
-        #
-        # The following handlers modify text, so we need to see if
-        # there is a selection that includes text prior to the prompt.
-        #
-        # Don't modify a selection with text prior to the prompt.
         elif selecting and key not in NAVKEYS and not self.CanEdit():
             pass
 
-        # Paste from the clipboard.
         elif (controlDown and not shiftDown and key in (ord('V'), ord('v'))) \
                 or (shiftDown and not controlDown and key == wx.WXK_INSERT):
             self.Paste()
 
-        # manually invoke AutoComplete and Calltips
         elif controlDown and key == wx.WXK_SPACE:
             pass  # self.OnCallTipAutoCompleteManually(shiftDown)
 
-        # Paste from the clipboard, run commands.
         elif controlDown and shiftDown and key in (ord('V'), ord('v')):
             self.PasteAndRun()
 
-        # Replace with the previous command from the history buffer.
         elif (controlDown and key == wx.WXK_UP) \
                 or (altDown and key in (ord('P'), ord('p'))):
             self.OnHistoryReplace(step=+1)
 
-        # Replace with the next command from the history buffer.
         elif (controlDown and key == wx.WXK_DOWN) \
                 or (altDown and key in (ord('N'), ord('n'))):
             self.OnHistoryReplace(step=-1)
 
-        # Insert the previous command from the history buffer.
         elif (shiftDown and key == wx.WXK_UP) and self.CanEdit():
             self.OnHistoryInsert(step=+1)
 
-        # Insert the next command from the history buffer.
         elif (shiftDown and key == wx.WXK_DOWN) and self.CanEdit():
             self.OnHistoryInsert(step=-1)
 
-        # Search up the history for the text in front of the cursor.
         elif key == wx.WXK_F8:
             self.OnHistorySearch()
 
-        # Don't backspace over the latest non-continuation prompt.
         elif key == wx.WXK_BACK:
             if selecting and self.CanEdit():
                 event.Skip()
@@ -734,28 +704,22 @@ Platform: %s""" % (
                 else:
                     event.Skip()
 
-        # Only allow these keys after the latest prompt.
         elif key in (wx.WXK_TAB, wx.WXK_DELETE):
             if self.CanEdit():
                 event.Skip()
 
-        # Don't toggle between insert mode and overwrite mode.
         elif key == wx.WXK_INSERT:
             pass
 
-        # Don't allow line deletion.
         elif controlDown and key in (ord('L'), ord('l')):
             pass
 
-        # Don't allow line transposition.
         elif controlDown and key in (ord('T'), ord('t')):
             pass
 
-        # Basic navigation keys should work anywhere.
         elif key in NAVKEYS:
             event.Skip()
 
-        # Protect the readonly portion of the shell.
         elif not self.CanEdit():
             if key not in [wx.WXK_CONTROL, wx.WXK_ALT, wx.WXK_SHIFT]:
                 self.GotoPos(self.GetLength())
@@ -777,11 +741,7 @@ Platform: %s""" % (
         newlist = re.split(r'[ \.\[\]=}(\)\,0-9"]', joined)
 
         # length > 1 (mix out "trash")
-        thlist = []
-        for i in newlist:
-            if len(i) > 1:
-                thlist.append(i)
-
+        thlist = [i for i in newlist if len(i) > 1]
         # unique (no duplicate words
         # oneliner from german python forum => unique list
         unlist = [thlist[i] for i in range(len(thlist))
@@ -916,19 +876,15 @@ Platform: %s""" % (
             else:
                 self.push(command)
                 wx.CallLater(1, self.EnsureCaretVisible)
-        # Or replace the current command with the other command.
+        elif self.getCommand(rstrip=False):
+            command = self.getMultilineCommand()
+            self.clearCommand()
+            self.write(command)
         else:
-            # If the line contains a command (even an invalid one).
-            if self.getCommand(rstrip=False):
-                command = self.getMultilineCommand()
-                self.clearCommand()
-                self.write(command)
-            # Otherwise, put the cursor back where we started.
-            else:
-                self.SetCurrentPos(thepos)
-                self.SetAnchor(thepos)
+            self.SetCurrentPos(thepos)
+            self.SetAnchor(thepos)
 
-                self.GotoPos(self.GetLength())
+            self.GotoPos(self.GetLength())
 
     def getMultilineCommand(self, rstrip=True):
         """Extract a multi-line command from the editor.
@@ -1007,9 +963,8 @@ Platform: %s""" % (
             self.addHistory(command.rstrip())
         if self.process_shell:
             self.waiting_for_process = True
-        else:
-            if not silent:
-                self.prompt()
+        elif not silent:
+            self.prompt()
 
     def addHistory(self, command):
         """Add command to the command history."""
@@ -1113,8 +1068,7 @@ Platform: %s""" % (
                                     'Input Dialog (Raw)', '')
         try:
             if dialog.ShowModal() == wx.ID_OK:
-                text = dialog.GetValue()
-                return text
+                return dialog.GetValue()
         finally:
             dialog.Destroy()
         return ''
@@ -1163,12 +1117,12 @@ Platform: %s""" % (
         """Display auto-completion popup list."""
         self.AutoCompSetAutoHide(self.autoCompleteAutoHide)
         self.AutoCompSetIgnoreCase(self.autoCompleteCaseInsensitive)
-        autocomp_list = self.interp.getAutoCompleteList(
+        if autocomp_list := self.interp.getAutoCompleteList(
             command,
             includeMagic=self.autoCompleteIncludeMagic,
             includeSingle=self.autoCompleteIncludeSingle,
-            includeDouble=self.autoCompleteIncludeDouble)
-        if autocomp_list:
+            includeDouble=self.autoCompleteIncludeDouble,
+        ):
             options = ' '.join(autocomp_list)
             # offset = 0
             self.AutoCompShow(offset, options)
@@ -1184,7 +1138,7 @@ Platform: %s""" % (
             return
         if argspec and insertcalltip and self.callTipInsert:
             startpos = self.GetCurrentPos()
-            self.write(argspec + ')')
+            self.write(f'{argspec})')
             endpos = self.GetCurrentPos()
             self.SetSelection(endpos, startpos)
         if tip:
@@ -1255,49 +1209,36 @@ Platform: %s""" % (
 
     def redirectStdin(self, redirect=True):
         """If redirect is true then sys.stdin will come from the shell."""
-        if redirect:
-            sys.stdin = self.reader
-        else:
-            sys.stdin = self.stdin
+        sys.stdin = self.reader if redirect else self.stdin
 
     def redirectStdout(self, redirect=True):
         """If redirect is true then sys.stdout will go to the shell."""
-        if redirect:
-            sys.stdout = PseudoFileOut(self.writeOut)
-        else:
-            sys.stdout = self.stdout
+        sys.stdout = PseudoFileOut(self.writeOut) if redirect else self.stdout
 
     def redirectStderr(self, redirect=True):
         """If redirect is true then sys.stderr will go to the shell."""
-        if redirect:
-            sys.stderr = PseudoFileErr(self.writeErr)
-        else:
-            sys.stderr = self.stderr
+        sys.stderr = PseudoFileErr(self.writeErr) if redirect else self.stderr
 
     def CanCut(self):
         """Return true if text is selected and can be cut."""
-        if self.GetSelectionStart() != self.GetSelectionEnd() \
-                and self.GetSelectionStart() >= self.promptPosEnd \
-                and self.GetSelectionEnd() >= self.promptPosEnd:
-            return True
-        else:
-            return False
+        return (
+            self.GetSelectionStart() != self.GetSelectionEnd()
+            and self.GetSelectionStart() >= self.promptPosEnd
+            and self.GetSelectionEnd() >= self.promptPosEnd
+        )
 
     def CanPaste(self):
         """Return true if a paste should succeed."""
-        if self.CanEdit() and editwindow.EditWindow.CanPaste(self):
-            return True
-        else:
-            return False
+        return bool(self.CanEdit() and editwindow.EditWindow.CanPaste(self))
 
     def CanEdit(self):
         """Return true if editing should succeed."""
         if self.GetSelectionStart() != self.GetSelectionEnd():
-            if self.GetSelectionStart() >= self.promptPosEnd \
-                    and self.GetSelectionEnd() >= self.promptPosEnd:
-                return True
-            else:
-                return False
+            return (
+                self.GetSelectionStart() >= self.promptPosEnd
+                and self.GetSelectionEnd() >= self.promptPosEnd
+            )
+
         else:
             return self.GetCurrentPos() >= self.promptPosEnd
 
